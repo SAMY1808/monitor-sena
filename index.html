@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101c31">
+  <meta name="description" content="Estado automático del portal de personas y la Agencia Pública de Empleo del SENA; revisión horaria y API JSON.">
+  <title>Monitor SENA · Estado de inscripciones</title>
+  <style>
+    :root { color-scheme: light; --ink:#18273c; --muted:#627184; --border:#e1e9ef; --bg:#f6f8fb; --green:#0a7852; --red:#c04441; --amber:#8c5a1e; --navy:#101c31; }
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif} a{color:inherit} button{font:inherit;cursor:pointer}
+    .hero{background:radial-gradient(ellipse at 90% 12%,#214064 0%,transparent 45%),linear-gradient(145deg,#111d32,#17293f);color:#fff;padding:27px max(25px,calc((100vw - 1010px)/2)) 75px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:49px;flex-wrap:wrap}.brand{display:flex;align-items:center;gap:11px;font-weight:760;letter-spacing:.05em;font-size:14px}.logo{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:#52d6ac;color:#10263a;font-weight:900;font-size:21px}.top-note{font-size:12px;color:#bad1de;display:flex;gap:9px;align-items:center}.dot{display:inline-block;width:8px;height:8px;border-radius:100%;background:#52d6ac;box-shadow:0 0 0 3px #52d6ac18}
+    h1{font-size:clamp(31px,5vw,49px);line-height:1.1;max-width:690px;letter-spacing:-.045em;margin:0 0 17px} .headline-accent{color:#62dfb5}.intro{color:#b9cede;max-width:625px;font-size:16px;margin:0 0 30px}.hero-bar{display:flex;align-items:center;gap:13px;flex-wrap:wrap}.hero-badge{background:#ffffff13;border:1px solid #ffffff24;padding:8px 13px;border-radius:99px;font-size:12px;color:#d8e8ed}.hero-badge strong{color:#fff}
+    main{max-width:1060px;padding:0 24px 40px;margin:-43px auto 0;position:relative}.toolbar{background:#fff;border:1px solid var(--border);box-shadow:0 12px 35px #10203211;border-radius:19px;padding:21px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}.toolbar strong{display:block;font-size:16px}.small{color:var(--muted);font-size:13px}.toolbar .small{margin-top:3px}.refresh{border:1px solid #b8d2c9;background:#eaf9f2;border-radius:10px;color:#13634d;padding:11px 16px;font-weight:700;white-space:nowrap}.refresh:hover{background:#ddf4e7}.refresh:disabled{opacity:.6;cursor:wait}
+    .heading{display:flex;align-items:center;justify-content:space-between;margin:38px 1px 15px;gap:10px;flex-wrap:wrap}.heading h2{font-size:20px;letter-spacing:-.02em;margin:0}.section-meta{color:#718096;font-size:12px}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.card{background:#fff;border:1px solid var(--border);box-shadow:0 8px 22px #14243f07;border-radius:18px;padding:24px;display:flex;flex-direction:column;min-height:320px}.card-header{display:flex;gap:14px;align-items:center;margin-bottom:23px}.mini-icon{width:42px;height:42px;border-radius:12px;background:#ecf1f7;color:#2f567d;display:grid;place-items:center;font-size:20px;flex-shrink:0}.card h3{font-size:17px;line-height:1.2;letter-spacing:-.025em;margin:0 0 4px}.site-link{font-size:12px;color:#758393;text-decoration:none;overflow-wrap:anywhere}.site-link:hover{text-decoration:underline}.status-area{margin:0 0 17px}.overline{font-size:11px;letter-spacing:.085em;text-transform:uppercase;color:#758393;font-weight:730;margin-bottom:8px}.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;border-radius:9px;padding:7px 12px;font-weight:740;font-size:14px}.pill::before{content:"";width:7px;height:7px;border-radius:20px;background:currentColor}.pill.neutral{background:#eff2f5;color:#546475;border-color:#e1e6eb}.pill.good{background:#e7f5ed;color:var(--green);border-color:#cce8d9}.pill.bad{background:#fff0ed;color:var(--red);border-color:#f8d6ce}.pill.warn{background:#fff5e4;color:var(--amber);border-color:#f3dfbb}.explain{color:#5c6b7e;font-size:13px;line-height:1.6;margin:0 0 20px;min-height:64px}.footer-row{margin-top:auto;border-top:1px solid #edf1f4;padding-top:16px;display:flex;justify-content:space-between;gap:12px;align-items:center;color:#738295;font-size:12px;flex-wrap:wrap}.footer-row a{color:#1f665e;font-weight:650;text-decoration:none}.footer-row a:hover{text-decoration:underline}.changed{font-size:11px;color:#895b15;background:#fff4df;border-radius:7px;padding:3px 7px}
+    .infobox{display:grid;grid-template-columns:1fr 1fr;gap:17px;margin-top:21px}.panel{border:1px solid var(--border);background:#fff;border-radius:17px;padding:23px}.panel h3{margin:0 0 8px;font-size:16px;letter-spacing:-.02em}.panel p{margin:0;color:#69798b;font-size:13px}.signal-list{display:flex;flex-direction:column;gap:13px;margin-top:19px}.signal{display:flex;align-items:start;gap:10px;font-size:13px;color:#536477}.signal b{color:#2d3b4e}.symbol{font-size:19px;line-height:1.1}.api-url{display:flex;gap:8px;align-items:center;background:#f4f7fa;border:1px solid #e7ecef;border-radius:9px;padding:9px 10px;margin-top:18px}.api-url code{font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere;flex:1;color:#325166}.copy{padding:7px 10px;border-radius:7px;border:1px solid #cbdae3;background:white;color:#264e62;font-size:12px;font-weight:750}.history{background:#fff;border:1px solid var(--border);border-radius:17px;overflow:hidden}.history-table{width:100%;border-collapse:collapse;text-align:left;font-size:12px}.history-table th{background:#f6f9fb;font-weight:700;color:#69798a}.history-table td,.history-table th{padding:13px 16px;border-bottom:1px solid #ecf0f3}.history-table tbody tr:last-child td{border:0}.history-table td{color:#435467}.table-scroll{overflow-x:auto}.mini-label{display:inline-block;padding:3px 7px;border-radius:7px;background:#eef2f5;color:#536679;font-weight:650;white-space:nowrap}.mini-label.warn{background:#fff0e5;color:#9d5d23}.mini-label.good{background:#e2f5ea;color:#086742}.mini-label.bad{background:#feeae8;color:#a7413b} .no-history{font-size:13px;color:#78889c;padding:18px}.footnote{color:#7a8999;font-size:12px;margin:22px 3px;text-align:center} .error{color:#b44534;font-size:12px;margin-top:6px}
+    @media(max-width:680px){.hero{padding:20px 22px 75px}.top{margin-bottom:37px}main{padding:0 15px 30px}.toolbar{padding:18px}.cards,.infobox{grid-template-columns:1fr}.card{min-height:290px}.intro{font-size:15px}.panel{padding:20px}.hero-badge{font-size:11px}}
+    @media(prefers-reduced-motion:no-preference){.card,.panel{transition:transform .16s, box-shadow .16s}.card:hover{transform:translateY(-2px);box-shadow:0 15px 25px #17283a0b}}
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="top">
+      <div class="brand"><span class="logo">S</span> MONITOR SENA <span style="font-weight:400;color:#aabfca">/ APE</span></div>
+      <div class="top-note"><span class="dot"></span> Observación pública automatizada</div>
+    </div>
+    <h1>¿Ya está habilitado<br><span class="headline-accent">el registro?</span></h1>
+    <p class="intro">Consulta aquí el estado de los portales del SENA sin entrar a sus páginas. Diferenciamos entre un sitio que responde y un formulario que parece permitir inscripciones.</p>
+    <div class="hero-bar">
+      <span class="hero-badge">⏱ Comprobación programada <strong>cada hora</strong></span>
+      <span class="hero-badge">🔒 Solo lectura, sin credenciales</span>
+    </div>
+  </header>
+  <main>
+    <div class="toolbar" aria-live="polite">
+      <div><strong id="general-status">Estado sin consultar</strong><div class="small" id="last-check">Esperando la primera revisión automatizada</div><div id="fetch-error" class="error" hidden></div></div>
+      <button id="refresh" class="refresh" type="button">↻ Actualizar pantalla</button>
+    </div>
+
+    <section aria-label="Portales monitorizados">
+      <div class="heading"><h2>Estado de los portales</h2><span class="section-meta">2 direcciones supervisadas</span></div>
+      <div class="cards" id="cards">
+        <article class="card"><h3>Cargando comprobaciones…</h3><p class="small">Consultando el archivo de estado.</p></article>
+      </div>
+    </section>
+
+    <div class="infobox">
+      <section class="panel">
+        <h3>Cómo interpretar los resultados</h3>
+        <p>Una respuesta HTTP 200 puede ser un aviso de suspensión y no una inscripción funcional. Por eso el estado siempre exige contexto.</p>
+        <div class="signal-list">
+          <div class="signal"><span class="symbol">🟢</span><span><b>Formulario detectado:</b> parece existir un formulario de alta, pero hay que comprobar que acepte el trámite.</span></div>
+          <div class="signal"><span class="symbol">🔴</span><span><b>Servicio suspendido:</b> se detectó un comunicado de interrupción.</span></div>
+          <div class="signal"><span class="symbol">⚪</span><span><b>Sin confirmar:</b> la respuesta no permite asegurar si están abiertas las inscripciones.</span></div>
+        </div>
+      </section>
+      <section class="panel">
+        <h3>API pública de estado</h3>
+        <p>Este panel se alimenta de un archivo JSON que puedes utilizar también desde una aplicación, un atajo del móvil o un programa propio.</p>
+        <div class="api-url"><code id="api-address"></code><button class="copy" id="copy-api" type="button">Copiar</button></div>
+        <p style="margin-top:13px">Se actualiza al concluir la tarea automática. El botón de arriba vuelve a leer los datos; no fuerza una comprobación en el servidor.</p>
+      </section>
+    </div>
+
+    <section aria-label="Historial de revisiones">
+      <div class="heading"><h2>Últimas revisiones</h2><span class="section-meta">Horario de Colombia (UTC−5)</span></div>
+      <div class="history table-scroll"><table class="history-table"><thead><tr><th>Fecha y hora</th><th>Portal de personas</th><th>Agencia Pública de Empleo</th></tr></thead><tbody id="history-body"><tr><td colspan="3" class="no-history">Sin historial todavía.</td></tr></tbody></table></div>
+    </section>
+    <p class="footnote">Monitor comunitario no oficial. No pertenece al SENA. No realiza postulaciones ni procesa datos personales. Consulta directamente al SENA para confirmar trámites.</p>
+  </main>
+  <script>
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const apiUrl = new URL('./status.json', location.href).href;
+    $('api-address').textContent = apiUrl;
+    const fmt = iso => {
+      if (!iso) return 'Aún no revisado';
+      const date = new Date(iso);
+      return Number.isNaN(date.getTime()) ? 'Fecha desconocida' : new Intl.DateTimeFormat('es-CO', { timeZone:'America/Bogota', dateStyle:'medium', timeStyle:'short' }).format(date);
+    };
+    const siteStates = {
+      pending: ['Sin revisar', 'neutral'],
+      online: ['Página en línea', 'good'],
+      notice: ['Aviso de suspensión', 'bad'],
+      error: ['Error del servidor', 'warn'],
+      unknown: ['No verificable', 'neutral']
+    };
+    const regStates = {
+      possible: ['Formulario detectado', 'good'],
+      suspended: ['Servicio suspendido', 'bad'],
+      closed: ['Registro cerrado', 'warn'],
+      unknown: ['Inscripción sin confirmar', 'neutral']
+    };
+    const el = (tag, className, value) => {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (value !== undefined) node.textContent = String(value);
+      return node;
+    };
+    function badge([name, color]) { const e=el('span', 'pill '+color, name); return e; }
+    function renderSite(site, index) {
+      const card = el('article','card');
+      const head = el('div','card-header');
+      head.appendChild(el('div','mini-icon',index === 0 ? '♙' : '▤'));
+      const headtext = el('div');
+      headtext.appendChild(el('h3','',site.name || 'Portal'));
+      const link = el('a','site-link',site.url || 'Enlace no disponible');
+      if (String(site.url||'').startsWith('https://')) { link.href=site.url; link.target='_blank'; link.rel='noopener noreferrer'; }
+      headtext.appendChild(link);head.appendChild(headtext);card.appendChild(head);
+      const group = el('div','status-area'); group.appendChild(el('div','overline','Estado de la página'));
+      group.appendChild(badge(siteStates[site.site_status] || siteStates.unknown));card.appendChild(group);
+      const reg = el('div','status-area');reg.appendChild(el('div','overline','Posibilidad de inscripción'));
+      reg.appendChild(badge(regStates[site.registration_status] || regStates.unknown));card.appendChild(reg);
+      card.appendChild(el('p','explain',site.details || 'No hay detalles disponibles.'));
+      const footer = el('div','footer-row');
+      footer.appendChild(el('span','',site.checked_at ? 'Revisado: '+fmt(site.checked_at) : 'Revisión pendiente'));
+      if (site.changed) footer.appendChild(el('span','changed','Estado cambiado'));
+      else if (site.http_status) footer.appendChild(el('span','', 'HTTP '+site.http_status));
+      card.appendChild(footer);
+      return card;
+    }
+    function tinyState(item) {
+      const key = item && item.registration_status;
+      const [label, color] = regStates[key] || regStates.unknown;
+      return el('span','mini-label '+(color==='neutral'?'':color),label);
+    }
+    function render(data) {
+      const sites=Array.isArray(data.sites)?data.sites:[];
+      const cards=$('cards');cards.replaceChildren(...sites.map(renderSite));
+      if (!sites.length) cards.appendChild(el('p','small','No hay portales configurados.'));
+      const pending = !data.generated_at;
+      const suspended = sites.filter(s=>s.registration_status==='suspended').length;
+      const possible = sites.filter(s=>s.registration_status==='possible').length;
+      $('general-status').textContent = pending ? 'Pendiente de la primera revisión' : (possible ? `${possible} formulario(s) aparentemente disponible(s)` : suspended ? `${suspended} portal(es) con suspensión detectada` : 'Estado actualizado');
+      const age = data.generated_at ? (Date.now()-new Date(data.generated_at).getTime())/3600000 : 0;
+      $('last-check').textContent = pending ? 'Ejecuta el primer chequeo desde GitHub Actions.' : `Última revisión: ${fmt(data.generated_at)}${age>2.5?' · Atención: información desactualizada':''}`;
+      const body = $('history-body');body.replaceChildren();
+      const entries = Array.isArray(data.history)?data.history.slice(-12).reverse():[];
+      if (!entries.length) { const tr=el('tr');const td=el('td','no-history','El historial aparecerá tras la primera revisión.');td.colSpan=3;tr.appendChild(td);body.appendChild(tr); }
+      entries.forEach(r=> { const tr=el('tr');tr.appendChild(el('td','',fmt(r.checked_at)));for (const id of ['persona','ape']) { const td=el('td');td.appendChild(tinyState(r.states && r.states[id]));tr.appendChild(td); }body.appendChild(tr); });
+    }
+    async function update() {
+      $('refresh').disabled = true; $('fetch-error').hidden = true;
+      try {
+        const res = await fetch(apiUrl+'?t='+Date.now(),{cache:'no-store'});
+        if (!res.ok) throw new Error('HTTP '+res.status);
+        render(await res.json());
+      } catch(e) {
+        $('fetch-error').hidden=false;
+        $('fetch-error').textContent='No se pudieron leer los resultados. Comprueba que GitHub Pages esté publicado.';
+        $('general-status').textContent='No se pudo consultar el archivo de estado';
+      } finally { $('refresh').disabled=false; }
+    }
+    $('refresh').addEventListener('click',update);
+    $('copy-api').addEventListener('click',async()=> {
+      try { await navigator.clipboard.writeText(apiUrl); $('copy-api').textContent='Copiado'; }
+      catch(e) { $('copy-api').textContent='Selecciona y copia la URL'; }
+    });
+    update();
+  </script>
+</body>
+</html>
